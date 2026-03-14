@@ -26,33 +26,6 @@ export const vuetify = createVuetify({
   directives,
   theme: {
     defaultTheme: getDefaultTheme(),
-    themes: {
-      light: {
-        colors: {
-          primary: "#1976D2",
-          secondary: "#424242",
-          accent: "#82B1FF",
-          error: "#FF5252",
-          info: "#2196F3",
-          success: "#4CAF50",
-          warning: "#FFC107",
-        },
-      },
-      dark: {
-        dark: true,
-        colors: {
-          primary: "#90CAF9",
-          secondary: "#B0BEC5",
-          accent: "#82B1FF",
-          error: "#EF9A9A",
-          info: "#81D4FA",
-          success: "#A5D6A7",
-          warning: "#FFE082",
-          background: "#121212",
-          surface: "#1E1E1E",
-        },
-      },
-    },
   },
   icons: {
     defaultSet: "mdi",
