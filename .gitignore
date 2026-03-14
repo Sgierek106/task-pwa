@@ -8,6 +8,8 @@ client/*.local
 # Server build artifacts
 server/bin/
 server/obj/
+tests/**/bin/
+tests/**/obj/
 server/*.db
 server/*.db-shm
 server/*.db-wal
