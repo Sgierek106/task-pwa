@@ -95,17 +95,16 @@ public sealed class SyncService
 
         await _db.SaveChangesAsync(ct);
 
-        // Return all tasks changed since lastSyncAt for this user
-        IQueryable<TaskItem> changedQuery = _db.Tasks.Where(t => t.UserKey == userKey);
-        if (request.LastSyncAt.HasValue)
-        {
-            changedQuery = changedQuery.Where(t => t.UpdatedAt > request.LastSyncAt.Value);
-        }
-
-        var changedTasks = await changedQuery
-            .OrderBy(t => t.UpdatedAt)
+        // Keep user scoping in SQL, then do DateTimeOffset filtering/sorting in memory for SQLite compatibility.
+        var userTasks = await _db.Tasks
+            .Where(t => t.UserKey == userKey)
             .Select(t => MapToDto(t))
             .ToListAsync(ct);
+
+        var changedTasks = userTasks
+            .Where(t => !request.LastSyncAt.HasValue || t.UpdatedAt > request.LastSyncAt.Value)
+            .OrderBy(t => t.UpdatedAt)
+            .ToList();
 
         return new SyncResponse(serverNow, appliedOpIds, rejected, changedTasks);
     }
