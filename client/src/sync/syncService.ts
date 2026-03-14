@@ -3,7 +3,7 @@ import { tasksRepo } from '@/data/tasksRepo'
 import type { Task } from '@/data/db'
 import { metaRepo } from '@/data/metaRepo'
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:5000'
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:5015'
 
 export interface SyncResult {
   success: boolean

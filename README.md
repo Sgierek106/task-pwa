@@ -27,9 +27,9 @@ cd server
 dotnet run
 ```
 
-The API will be available at `http://localhost:5000` (or `https://localhost:5001`).
+The API will be available at `http://localhost:5015`.
 
-Swagger UI is available at `http://localhost:5000/swagger` in development.
+Swagger UI is available at `http://localhost:5015/swagger` in development.
 
 The SQLite database (`taskpwa.db`) is created automatically on first run.
 
@@ -50,6 +50,9 @@ npm run dev
 
 The app will be available at `http://localhost:5173`.
 
+> **Note**: The client connects to the API at `http://localhost:5015` by default.
+> You can override this via the `VITE_API_BASE` environment variable in a `.env.local` file.
+
 ---
 
 ## API Overview
@@ -63,6 +66,32 @@ All endpoints require an `X-User-Key: <guid>` header to partition data per user.
 |--------|------|-------------|
 | `GET` | `/api/tasks/changes?since={isoDateTime}` | Get tasks changed since timestamp |
 | `POST` | `/api/sync` | Apply a batch of operations and get server changes |
+
+### Sync Request Body (`POST /api/sync`)
+```json
+{
+  "clientId": "<guid>",
+  "lastSyncAt": "2026-01-01T00:00:00.000Z",
+  "operations": [
+    {
+      "opId": "<guid>",
+      "type": "upsert",
+      "entityId": "<task-guid>",
+      "createdAt": "2026-01-01T00:01:00.000Z",
+      "task": {
+        "id": "<task-guid>",
+        "title": "Buy milk",
+        "notes": null,
+        "isCompleted": false,
+        "dueAt": null,
+        "updatedAt": "2026-01-01T00:01:00.000Z",
+        "deletedAt": null,
+        "baseVersion": null
+      }
+    }
+  ]
+}
+```
 
 ---
 
@@ -86,6 +115,6 @@ Tasks are partitioned by `userKey`. The server uses last-write-wins (by `updated
 
 ## Development Notes
 
-- The client uses `VITE_API_BASE` env variable (default: `http://localhost:5000`) to reach the API.
+- The client uses `VITE_API_BASE` env variable (default: `http://localhost:5015`) to reach the API.
 - CORS is configured for `http://localhost:5173` and `http://localhost:3000` in development.
 - The SQLite DB file is excluded from git.
