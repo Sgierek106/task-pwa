@@ -25,8 +25,7 @@ public sealed class SyncService
             if (op.Type == "upsert" && op.Task is not null)
             {
                 var payload = op.Task;
-                var existing = await _db.Tasks
-                    .FirstOrDefaultAsync(t => t.Id == op.EntityId && t.UserKey == userKey, ct);
+                var existing = await FindTaskForUserAsync(op.EntityId, userKey, ct);
 
                 if (existing is null)
                 {
@@ -71,8 +70,7 @@ public sealed class SyncService
             }
             else if (op.Type == "delete")
             {
-                var existing = await _db.Tasks
-                    .FirstOrDefaultAsync(t => t.Id == op.EntityId && t.UserKey == userKey, ct);
+                var existing = await FindTaskForUserAsync(op.EntityId, userKey, ct);
 
                 if (existing is null)
                 {
@@ -119,4 +117,16 @@ public sealed class SyncService
         t.DeletedAt,
         t.Version
     );
+
+    private async Task<TaskItem?> FindTaskForUserAsync(Guid taskId, Guid userKey, CancellationToken ct)
+    {
+        // Avoid tracking conflicts when multiple operations in one request reference the same task.
+        var tracked = _db.Tasks.Local.FirstOrDefault(t => t.Id == taskId && t.UserKey == userKey);
+        if (tracked is not null)
+        {
+            return tracked;
+        }
+
+        return await _db.Tasks.FirstOrDefaultAsync(t => t.Id == taskId && t.UserKey == userKey, ct);
+    }
 }
