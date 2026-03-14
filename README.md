@@ -3,7 +3,7 @@
 An offline-first, installable Progressive Web App (PWA) task manager built with:
 
 - **Frontend**: Vue 3 + Vite + Vuetify 3 + Pinia + Vue Router
-- **Backend**: ASP.NET Core 9 Web API (Controllers) + EF Core + SQLite
+- **Backend**: ASP.NET Core 10 Web API (Controllers) + EF Core + SQLite
 
 ## Project Structure
 
@@ -18,7 +18,7 @@ task-pwa/
 ## Running the Server
 
 ### Prerequisites
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 ### Steps
 

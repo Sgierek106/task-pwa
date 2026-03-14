@@ -11,14 +11,14 @@ using TaskPwa.Server.Data;
 namespace TaskPwa.Server.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260314153940_InitialCreate")]
+    [Migration("20260314161835_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
 
             modelBuilder.Entity("TaskPwa.Server.Models.TaskItem", b =>
                 {
