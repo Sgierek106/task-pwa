@@ -7,8 +7,8 @@
       <v-card-title>User Key</v-card-title>
       <v-card-text>
         <p class="text-body-2 mb-3 text-medium-emphasis">
-          Your user key partitions your tasks on the server. Use the same key on all devices to
-          enable multi-device sync.
+          Your user key partitions your tasks on the server. Use the same key on
+          all devices to enable multi-device sync.
         </p>
 
         <v-text-field
@@ -58,13 +58,28 @@
       </v-card-text>
     </v-card>
 
+    <!-- Appearance section -->
+    <v-card class="mb-4">
+      <v-card-title>Appearance</v-card-title>
+      <v-card-text>
+        <v-switch
+          v-model="isDarkMode"
+          color="primary"
+          :label="isDarkMode ? 'Dark mode' : 'Light mode'"
+          inset
+        />
+      </v-card-text>
+    </v-card>
+
     <!-- Sync info -->
     <v-card class="mb-4">
       <v-card-title>Sync Status</v-card-title>
       <v-card-text>
         <p class="text-body-2">
           Last synced:
-          <strong>{{ lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Never' }}</strong>
+          <strong>{{
+            lastSyncAt ? new Date(lastSyncAt).toLocaleString() : "Never"
+          }}</strong>
         </p>
         <p class="text-body-2 mt-1">
           Pending ops in outbox: <strong>{{ pendingCount }}</strong>
@@ -90,77 +105,94 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { metaRepo } from '@/data/metaRepo'
-import { outboxRepo } from '@/data/outboxRepo'
-import { useSyncStore } from '@/stores/sync.store'
+import { ref, onMounted, watch } from "vue";
+import { useTheme } from "vuetify";
+import { metaRepo } from "@/data/metaRepo";
+import { outboxRepo } from "@/data/outboxRepo";
+import { useSyncStore } from "@/stores/sync.store";
 
-const syncStore = useSyncStore()
+const THEME_STORAGE_KEY = "task-pwa-theme";
 
-const userKey = ref<string | null>(null)
-const clientId = ref<string | null>(null)
-const lastSyncAt = ref<string | null>(null)
-const pendingCount = ref(0)
-const newUserKey = ref('')
+const syncStore = useSyncStore();
+const theme = useTheme();
 
-const snackbar = ref(false)
-const snackbarText = ref('')
-const snackbarColor = ref('success')
+const userKey = ref<string | null>(null);
+const clientId = ref<string | null>(null);
+const lastSyncAt = ref<string | null>(null);
+const pendingCount = ref(0);
+const newUserKey = ref("");
+const isDarkMode = ref(false);
 
-function notify(text: string, color = 'success') {
-  snackbarText.value = text
-  snackbarColor.value = color
-  snackbar.value = true
+const snackbar = ref(false);
+const snackbarText = ref("");
+const snackbarColor = ref("success");
+
+function notify(text: string, color = "success") {
+  snackbarText.value = text;
+  snackbarColor.value = color;
+  snackbar.value = true;
 }
 
 onMounted(async () => {
-  userKey.value = await metaRepo.getUserKey()
-  clientId.value = await metaRepo.getClientId()
-  lastSyncAt.value = await metaRepo.getLastSyncAt()
-  const ops = await outboxRepo.getPending()
-  pendingCount.value = ops.length
-})
+  isDarkMode.value = theme.global.current.value.dark;
+
+  userKey.value = await metaRepo.getUserKey();
+  clientId.value = await metaRepo.getClientId();
+  lastSyncAt.value = await metaRepo.getLastSyncAt();
+  const ops = await outboxRepo.getPending();
+  pendingCount.value = ops.length;
+});
+
+watch(isDarkMode, (isDark) => {
+  const nextTheme = isDark ? "dark" : "light";
+  theme.global.name.value = nextTheme;
+  window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+});
 
 async function generateNewKey() {
-  const key = crypto.randomUUID()
-  await metaRepo.setUserKey(key)
-  userKey.value = key
-  notify('New user key generated')
+  const key = crypto.randomUUID();
+  await metaRepo.setUserKey(key);
+  userKey.value = key;
+  notify("New user key generated");
 }
 
 async function applyPastedKey() {
-  if (!isValidUUID(newUserKey.value)) return
-  await metaRepo.setUserKey(newUserKey.value)
-  userKey.value = newUserKey.value
-  newUserKey.value = ''
-  notify('User key updated')
+  if (!isValidUUID(newUserKey.value)) return;
+  await metaRepo.setUserKey(newUserKey.value);
+  userKey.value = newUserKey.value;
+  newUserKey.value = "";
+  notify("User key updated");
 }
 
 async function copyUserKey() {
-  if (!userKey.value) return
-  await navigator.clipboard.writeText(userKey.value)
-  notify('User key copied to clipboard')
+  if (!userKey.value) return;
+  await navigator.clipboard.writeText(userKey.value);
+  notify("User key copied to clipboard");
 }
 
 async function copyClientId() {
-  if (!clientId.value) return
-  await navigator.clipboard.writeText(clientId.value)
-  notify('Client ID copied to clipboard')
+  if (!clientId.value) return;
+  await navigator.clipboard.writeText(clientId.value);
+  notify("Client ID copied to clipboard");
 }
 
 async function syncNow() {
-  const result = await syncStore.sync()
+  const result = await syncStore.sync();
   if (result.success) {
-    lastSyncAt.value = await metaRepo.getLastSyncAt()
-    const ops = await outboxRepo.getPending()
-    pendingCount.value = ops.length
-    notify(`Sync complete. Applied: ${result.appliedCount}, Changed: ${result.changedCount}`)
+    lastSyncAt.value = await metaRepo.getLastSyncAt();
+    const ops = await outboxRepo.getPending();
+    pendingCount.value = ops.length;
+    notify(
+      `Sync complete. Applied: ${result.appliedCount}, Changed: ${result.changedCount}`,
+    );
   } else {
-    notify(result.error ?? 'Sync failed', 'error')
+    notify(result.error ?? "Sync failed", "error");
   }
 }
 
 function isValidUUID(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value,
+  );
 }
 </script>
