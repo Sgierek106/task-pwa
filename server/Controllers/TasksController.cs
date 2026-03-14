@@ -7,14 +7,13 @@ namespace TaskPwa.Server.Controllers;
 
 [ApiController]
 [Route("api/tasks")]
-public sealed class TasksController : ControllerBase
+/// <summary>
+/// Exposes task query endpoints scoped to the current user key.
+/// </summary>
+/// <param name="db">Application database context.</param>
+public sealed class TasksController(AppDbContext db) : ControllerBase
 {
-    private readonly AppDbContext _db;
-
-    public TasksController(AppDbContext db)
-    {
-        _db = db;
-    }
+    private readonly AppDbContext _db = db ?? throw new ArgumentNullException(nameof(db));
 
     private Guid? GetUserKey()
     {
@@ -29,6 +28,9 @@ public sealed class TasksController : ControllerBase
     /// <summary>
     /// Returns all tasks for the authenticated user changed after <paramref name="since"/>.
     /// </summary>
+    /// <param name="since">Optional watermark used to fetch only changed tasks.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A list of task DTOs changed after the provided watermark.</returns>
     [HttpGet("changes")]
     [ProducesResponseType(typeof(IEnumerable<TaskDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

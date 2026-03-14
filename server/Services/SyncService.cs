@@ -5,15 +5,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TaskPwa.Server.Services;
 
-public sealed class SyncService
+/// <summary>
+/// Applies sync operations and computes changed task projections for a user partition.
+/// </summary>
+/// <param name="db">Application database context.</param>
+public sealed class SyncService(AppDbContext db) : ISyncService
 {
-    private readonly AppDbContext _db;
+    private readonly AppDbContext _db = db ?? throw new ArgumentNullException(nameof(db));
 
-    public SyncService(AppDbContext db)
-    {
-        _db = db;
-    }
-
+    /// <summary>
+    /// Processes incoming sync operations and returns the resulting delta from the server.
+    /// </summary>
+    /// <param name="userKey">Tenant key used to scope task data.</param>
+    /// <param name="request">Incoming sync payload from client.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Sync response containing applied operation IDs, rejected operations, and changed tasks.</returns>
     public async Task<SyncResponse> ProcessAsync(Guid userKey, SyncRequest request, CancellationToken ct = default)
     {
         var appliedOpIds = new List<Guid>();

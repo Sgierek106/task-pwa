@@ -46,7 +46,7 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
     opts.UseSqlite(connectionString));
 
 // Application services
-builder.Services.AddScoped<SyncService>();
+builder.Services.AddScoped<ISyncService, SyncService>();
 
 // CORS for dev client
 builder.Services.AddCors(opts =>

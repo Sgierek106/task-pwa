@@ -3,10 +3,16 @@ using TaskPwa.Server.Models;
 
 namespace TaskPwa.Server.Data;
 
-public sealed class AppDbContext : DbContext
+/// <summary>
+/// Entity Framework database context for Task PWA server data.
+/// </summary>
+/// <param name="options">Database context options.</param>
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
+    : DbContext(options ?? throw new ArgumentNullException(nameof(options)))
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
+    /// <summary>
+    /// Tasks persisted for all users.
+    /// </summary>
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

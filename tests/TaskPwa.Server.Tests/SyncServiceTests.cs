@@ -1,18 +1,23 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using FluentAssertions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TaskPwa.Server.Data;
 using TaskPwa.Server.Models;
 using TaskPwa.Server.Models.Sync;
 using TaskPwa.Server.Services;
-using Xunit;
+
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
 
 namespace TaskPwa.Server.Tests;
 
+[TestClass]
 public sealed class SyncServiceTests
 {
-    [Fact]
+    [TestMethod]
     public async Task ProcessAsync_WhenMultipleOpsTargetSameTask_DoesNotThrowAndAppliesLatest()
     {
+        // Arrange
         using var db = await CreateDbContextAsync();
         var service = new SyncService(db);
         var userKey = Guid.NewGuid();
@@ -59,21 +64,24 @@ public sealed class SyncServiceTests
             ]
         );
 
+        // Act
         var response = await service.ProcessAsync(userKey, request);
 
-        Assert.Equal(2, response.AppliedOpIds.Count);
-        Assert.Empty(response.Rejected);
+        // Assert
+        response.AppliedOpIds.Should().HaveCount(2);
+        response.Rejected.Should().BeEmpty();
 
         var saved = await db.Tasks.SingleAsync(t => t.Id == taskId && t.UserKey == userKey);
-        Assert.Equal("Second", saved.Title);
-        Assert.Equal("Updated", saved.Notes);
-        Assert.True(saved.IsCompleted);
-        Assert.Equal(2, saved.Version);
+        saved.Title.Should().Be("Second");
+        saved.Notes.Should().Be("Updated");
+        saved.IsCompleted.Should().BeTrue();
+        saved.Version.Should().Be(2);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task ProcessAsync_WhenIncomingWriteIsStale_RejectsWithConflict()
     {
+        // Arrange
         using var db = await CreateDbContextAsync();
         var userKey = Guid.NewGuid();
         var taskId = Guid.NewGuid();
@@ -120,17 +128,30 @@ public sealed class SyncServiceTests
             ]
         );
 
+        // Act
         var response = await service.ProcessAsync(userKey, request);
 
-        Assert.Empty(response.AppliedOpIds);
-        Assert.Single(response.Rejected);
-        Assert.Equal(opId, response.Rejected[0].OpId);
-        Assert.Equal("conflict", response.Rejected[0].Reason);
+        // Assert
+        response.AppliedOpIds.Should().BeEmpty();
+        response.Rejected.Should().ContainSingle();
+        response.Rejected[0].OpId.Should().Be(opId);
+        response.Rejected[0].Reason.Should().Be("conflict");
 
         var saved = await db.Tasks.SingleAsync(t => t.Id == taskId && t.UserKey == userKey);
-        Assert.Equal("Server Copy", saved.Title);
-        Assert.False(saved.IsCompleted);
-        Assert.Equal(3, saved.Version);
+        saved.Title.Should().Be("Server Copy");
+        saved.IsCompleted.Should().BeFalse();
+        saved.Version.Should().Be(3);
+    }
+
+    [TestMethod]
+    public void Constructor_WhenDbContextIsNull_ThrowsArgumentNullException()
+    {
+        // Arrange
+        Action act = () => _ = new SyncService(db: null!);
+
+        // Act + Assert
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("db");
     }
 
     private static async Task<AppDbContext> CreateDbContextAsync()
