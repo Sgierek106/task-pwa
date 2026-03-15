@@ -2,7 +2,7 @@
 
 An offline-first, installable Progressive Web App (PWA) task manager built with:
 
-- **Frontend**: Vue 3 + Vite + Vuetify 3 + Pinia + Vue Router
+- **Frontend**: Vue 3 + Vite + Vuetify 4 + Pinia + Vue Router
 - **Backend**: ASP.NET Core 10 Web API (Controllers) + EF Core + SQLite
 
 ## Project Structure
@@ -18,6 +18,7 @@ task-pwa/
 ## Running the Server
 
 ### Prerequisites
+
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 ### Steps
@@ -38,6 +39,7 @@ The SQLite database (`taskpwa.db`) is created automatically on first run.
 ## Running the Client
 
 ### Prerequisites
+
 - Node.js 18+
 
 ### Steps
@@ -58,16 +60,18 @@ The app will be available at `http://localhost:5173`.
 ## API Overview
 
 ### Authentication
+
 All endpoints require an `X-User-Key: <guid>` header to partition data per user.
 
 ### Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/tasks/changes?since={isoDateTime}` | Get tasks changed since timestamp |
-| `POST` | `/api/sync` | Apply a batch of operations and get server changes |
+| Method | Path                                     | Description                                        |
+| ------ | ---------------------------------------- | -------------------------------------------------- |
+| `GET`  | `/api/tasks/changes?since={isoDateTime}` | Get tasks changed since timestamp                  |
+| `POST` | `/api/sync`                              | Apply a batch of operations and get server changes |
 
 ### Sync Request Body (`POST /api/sync`)
+
 ```json
 {
   "clientId": "<guid>",
